@@ -182,6 +182,26 @@ You should see:
 
 ---
 
+## Frontend
+
+A ready-to-use frontend is included as `index.html`. No framework or build step required — just open it directly in your browser.
+
+**How to use:**
+1. Make sure the backend is running (`npm run dev`)
+2. Double-click `index.html` in File Explorer to open it in your browser
+3. Use the **Quick Fill** dropdown to select a test account and click Sign In
+
+**What it includes:**
+- Login form with quick-fill for all three test accounts
+- Live access token display with a countdown timer showing time until expiry
+- One-click buttons to call all three AI endpoints (`/free-model`, `/premium-model`, `/purge-cache`)
+- Raw JSON response viewer with colour-coded HTTP status codes (green for 2xx, red for 4xx)
+- Refresh Token and Logout buttons
+
+Try logging in as **Free User** and hitting the Premium or Admin endpoints to see the `403 Forbidden` response live.
+
+---
+
 ## Testing with Thunder Client (VS Code)
 
 1. Install the **Thunder Client** extension in VS Code.

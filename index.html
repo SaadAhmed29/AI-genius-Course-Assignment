@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Genius — Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0f;
+      --surface:  #111118;
+      --border:   #1e1e2e;
+      --accent:   #c8f04a;
+      --accent2:  #4af0c8;
+      --danger:   #f04a6a;
+      --text:     #e8e8f0;
+      --muted:    #5a5a72;
+      --radius:   10px;
+    }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── grid background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(200,240,74,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,240,74,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── layout ── */
+    #app {
+      position: relative; z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── header ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 48px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.4rem; letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+    #status-badge {
+      font-size: 0.7rem; letter-spacing: 0.08em;
+      padding: 5px 12px; border-radius: 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); transition: all 0.3s;
+    }
+    #status-badge.online  { border-color: var(--accent); color: var(--accent); }
+    #status-badge.offline { border-color: var(--danger); color: var(--danger); }
+
+    /* ── pages ── */
+    .page { display: none; animation: fadeUp 0.35s ease both; }
+    .page.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── section label ── */
+    .section-label {
+      font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 20px;
+    }
+    .section-label::before { content: '// '; color: var(--accent); }
+
+    /* ── card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+
+    /* ── form elements ── */
+    label {
+      display: block;
+      font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px; margin-top: 18px;
+    }
+    label:first-child { margin-top: 0; }
+
+    input, select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    select option { background: var(--surface); }
+
+    /* ── buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 11px 22px; border-radius: 6px;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent); color: #0a0a0f; font-weight: 600;
+      width: 100%; justify-content: center; margin-top: 22px;
+    }
+    .btn-primary:hover { background: #d8ff5a; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-danger {
+      background: transparent; color: var(--danger);
+      border: 1px solid var(--border);
+    }
+    .btn-danger:hover { border-color: var(--danger); background: rgba(240,74,106,0.08); }
+
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+    /* ── user info bar ── */
+    #user-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--accent); color: #0a0a0f;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .user-email { font-size: 0.82rem; color: var(--text); }
+    .user-role {
+      font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 20px; margin-top: 3px;
+    }
+    .role-Admin        { background: rgba(200,240,74,0.12); color: var(--accent); }
+    .role-Premium_User { background: rgba(74,240,200,0.12); color: var(--accent2); }
+    .role-Free_User    { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+    /* ── endpoint grid ── */
+    .endpoints { display: grid; gap: 12px; }
+
+    .endpoint-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+      transition: border-color 0.2s;
+    }
+    .endpoint-card:hover { border-color: #2a2a3e; }
+
+    .endpoint-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+
+    .method-badge {
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em;
+      padding: 4px 9px; border-radius: 4px; white-space: nowrap;
+      font-family: 'DM Mono', monospace;
+    }
+    .GET    { background: rgba(74,240,200,0.12); color: var(--accent2); }
+    .POST   { background: rgba(200,240,74,0.12); color: var(--accent); }
+    .DELETE { background: rgba(240,74,106,0.12); color: var(--danger); }
+
+    .endpoint-info { min-width: 0; }
+    .endpoint-path { font-size: 0.82rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .endpoint-desc { font-size: 0.68rem; color: var(--muted); margin-top: 3px; }
+
+    .lock-icon { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+    .lock-icon.admin   { color: var(--accent); }
+    .lock-icon.premium { color: var(--accent2); }
+
+    .btn-call {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border); font-size: 0.72rem;
+      padding: 8px 16px; white-space: nowrap;
+    }
+    .btn-call:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── token panel ── */
+    #token-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px; margin-bottom: 16px;
+    }
+    .token-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .token-value {
+      flex: 1; font-size: 0.72rem; color: var(--muted);
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 5px; padding: 8px 12px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .token-value.has-token { color: var(--accent2); }
+    .btn-copy {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); font-size: 0.7rem; padding: 8px 12px;
+    }
+    .btn-copy:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── response viewer ── */
+    #response-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-top: 16px;
+    }
+    .response-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    .response-title { font-size: 0.7rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+    .status-pill {
+      font-size: 0.68rem; padding: 3px 10px; border-radius: 20px;
+    }
+    .status-2xx { background: rgba(200,240,74,0.12); color: var(--accent); }
+    .status-4xx { background: rgba(240,74,106,0.12); color: var(--danger); }
+    .status-5xx { background: rgba(240,74,106,0.2);  color: var(--danger); }
+
+    #response-body {
+      padding: 18px; font-size: 0.78rem; line-height: 1.7;
+      color: var(--muted); min-height: 80px; white-space: pre-wrap; word-break: break-all;
+    }
+    #response-body.has-content { color: var(--text); }
+
+    /* ── loading spinner ── */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── toast ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 18px;
+      font-size: 0.78rem; color: var(--text);
+      transform: translateY(20px); opacity: 0;
+      transition: all 0.3s; pointer-events: none; z-index: 999;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { border-color: var(--accent); color: var(--accent); }
+    #toast.error   { border-color: var(--danger); color: var(--danger); }
+
+    /* ── page title ── */
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem; font-weight: 800; letter-spacing: -1px;
+      margin-bottom: 6px;
+    }
+    .page-sub {
+      font-size: 0.78rem; color: var(--muted); margin-bottom: 32px;
+    }
+
+    /* ── divider ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+    /* ── actions row ── */
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="logo">AI<span>—</span>Genius</div>
+    <div id="status-badge">● OFFLINE</div>
+  </header>
+
+  <!-- ══════════════ LOGIN PAGE ══════════════ -->
+  <div class="page active" id="page-login">
+    <p class="page-title">Sign in</p>
+    <p class="page-sub">Authenticate to access the AI platform endpoints.</p>
+
+    <div class="card">
+      <p class="section-label">Credentials</p>
+
+      <label>Email address</label>
+      <input type="email" id="login-email" placeholder="admin@aigenius.com" />
+
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" />
+
+      <label>Quick fill</label>
+      <select id="quick-fill">
+        <option value="">— select a test account —</option>
+        <option value="admin@aigenius.com|Admin@123">Admin  →  admin@aigenius.com</option>
+        <option value="premium@aigenius.com|Premium@123">Premium User  →  premium@aigenius.com</option>
+        <option value="free@aigenius.com|Free@123">Free User  →  free@aigenius.com</option>
+      </select>
+
+      <button class="btn btn-primary" id="btn-login">Sign In</button>
+    </div>
+
+    <div id="login-response" style="display:none;">
+      <div id="response-panel">
+        <div class="response-header">
+          <span class="response-title">Response</span>
+          <span id="login-status-pill" class="status-pill"></span>
+        </div>
+        <pre id="response-body"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ DASHBOARD PAGE ══════════════ -->
+  <div class="page" id="page-dashboard">
+
+    <div id="user-bar">
+      <div class="user-info">
+        <div class="avatar" id="avatar-letter">A</div>
+        <div>
+          <div class="user-email" id="display-email">—</div>
+          <div class="user-role" id="display-role">—</div>
+        </div>
+      </div>
+      <div class="actions" style="margin:0;">
+        <button class="btn btn-ghost" id="btn-refresh-token">↻ Refresh Token</button>
+        <button class="btn btn-danger" id="btn-logout">Logout</button>
+      </div>
+    </div>
+
+    <!-- Token panel -->
+    <div id="token-panel">
+      <p class="section-label">Access Token</p>
+      <div class="token-row">
+        <div class="token-value" id="token-display">No token</div>
+        <button class="btn btn-copy" id="btn-copy-token">Copy</button>
+      </div>
+      <p style="font-size:0.68rem; color:var(--muted); margin-top:8px;">
+        Expires in <span id="token-timer">—</span> · Refresh token stored in httpOnly cookie
+      </p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- AI Endpoints -->
+    <p class="section-label">AI Endpoints</p>
+    <div class="endpoints">
+
+      <div class="endpoint-card">
+        <div class="endpoint-left">
+          <span class="method-badge GET">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/ai/free-model</div>
+            <div class="endpoint-desc">All logged-in users</div>
+          </div>
+        </div>
+        <span class="lock-icon">🔓 Any role</span>
+        <button class="btn btn-call" data-endpoint="free">Call →</button>
+      </div>
+
+      <div class="endpoint-card">
+        <div class="endpoint-left">
+          <span class="method-badge POST">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/ai/premium-model</div>
+            <div class="endpoint-desc">Premium_User and Admin only</div>
+          </div>
+        </div>
+        <span class="lock-icon premium">⭐ Premium+</span>
+        <button class="btn btn-call" data-endpoint="premium">Call →</button>
+      </div>
+
+      <div class="endpoint-card">
+        <div class="endpoint-left">
+          <span class="method-badge DELETE">DELETE</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/ai/purge-cache</div>
+            <div class="endpoint-desc">Admin only</div>
+          </div>
+        </div>
+        <span class="lock-icon admin">🔑 Admin only</span>
+        <button class="btn btn-call" data-endpoint="purge">Call →</button>
+      </div>
+
+    </div>
+
+    <!-- Response panel -->
+    <div id="response-panel-dash" style="display:none;">
+      <div id="response-panel">
+        <div class="response-header">
+          <span class="response-title" id="dash-response-title">Response</span>
+          <span id="dash-status-pill" class="status-pill"></span>
+        </div>
+        <pre id="dash-response-body" class="has-content"></pre>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  const API = 'http://localhost:3000';
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let accessToken = null;
+  let currentUser = null;
+  let tokenExpiry = null;
+  let timerInterval = null;
+
+  // ── DOM refs ───────────────────────────────────────────────────────────────
+  const pages       = { login: document.getElementById('page-login'), dashboard: document.getElementById('page-dashboard') };
+  const statusBadge = document.getElementById('status-badge');
+  const toastEl     = document.getElementById('toast');
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function showPage(name) {
+    Object.values(pages).forEach(p => p.classList.remove('active'));
+    pages[name].classList.add('active');
+  }
+
+  function toast(msg, type = 'success') {
+    toastEl.textContent = msg;
+    toastEl.className = `show ${type}`;
+    setTimeout(() => toastEl.className = '', 3000);
+  }
+
+  function statusPillClass(status) {
+    if (status >= 200 && status < 300) return 'status-2xx';
+    if (status >= 400 && status < 500) return 'status-4xx';
+    return 'status-5xx';
+  }
+
+  function setStatus(online) {
+    statusBadge.textContent = online ? '● ONLINE' : '● OFFLINE';
+    statusBadge.className   = online ? 'online' : 'offline';
+  }
+
+  function startTokenTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (!tokenExpiry) return;
+      const secs = Math.max(0, Math.floor((tokenExpiry - Date.now()) / 1000));
+      const m = Math.floor(secs / 60), s = secs % 60;
+      document.getElementById('token-timer').textContent =
+        secs > 0 ? `${m}m ${String(s).padStart(2,'0')}s` : 'EXPIRED';
+    }, 1000);
+  }
+
+  function updateTokenDisplay() {
+    const el = document.getElementById('token-display');
+    if (accessToken) {
+      el.textContent = accessToken;
+      el.classList.add('has-token');
+    } else {
+      el.textContent = 'No token';
+      el.classList.remove('has-token');
+    }
+  }
+
+  function updateUserBar() {
+    if (!currentUser) return;
+    document.getElementById('display-email').textContent = currentUser.email;
+    const roleEl = document.getElementById('display-role');
+    roleEl.textContent = currentUser.role;
+    roleEl.className = `user-role role-${currentUser.role}`;
+    document.getElementById('avatar-letter').textContent =
+      currentUser.email[0].toUpperCase();
+  }
+
+  function showDashResponse(title, status, data) {
+    document.getElementById('response-panel-dash').style.display = 'block';
+    document.getElementById('dash-response-title').textContent = title;
+    const pill = document.getElementById('dash-status-pill');
+    pill.textContent = `HTTP ${status}`;
+    pill.className = `status-pill ${statusPillClass(status)}`;
+    const body = document.getElementById('dash-response-body');
+    body.textContent = JSON.stringify(data, null, 2);
+  }
+
+  // ── Check server health ────────────────────────────────────────────────────
+  async function checkHealth() {
+    try {
+      const r = await fetch(`${API}/health`);
+      setStatus(r.ok);
+    } catch { setStatus(false); }
+  }
+  checkHealth();
+
+  // ── Quick fill ─────────────────────────────────────────────────────────────
+  document.getElementById('quick-fill').addEventListener('change', e => {
+    if (!e.target.value) return;
+    const [email, password] = e.target.value.split('|');
+    document.getElementById('login-email').value    = email;
+    document.getElementById('login-password').value = password;
+  });
+
+  // ── Login ──────────────────────────────────────────────────────────────────
+  document.getElementById('btn-login').addEventListener('click', async () => {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) { toast('Fill in email and password', 'error'); return; }
+
+    const btn = document.getElementById('btn-login');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in…';
+
+    try {
+      const res  = await fetch(`${API}/api/auth/login`, {
+        method:      'POST',
+        headers:     { 'Content-Type': 'application/json' },
+        credentials: 'include',                              // needed for the refresh cookie
+        body:        JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      // show raw response
+      document.getElementById('login-response').style.display = 'block';
+      const pill = document.getElementById('login-status-pill');
+      pill.textContent = `HTTP ${res.status}`;
+      pill.className   = `status-pill ${statusPillClass(res.status)}`;
+      document.getElementById('response-body').textContent = JSON.stringify(data, null, 2);
+      document.getElementById('response-body').classList.add('has-content');
+
+      if (res.ok) {
+        accessToken = data.accessToken;
+        currentUser = data.user;
+        // decode expiry from JWT payload
+        try {
+          const payload = JSON.parse(atob(accessToken.split('.')[1]));
+          tokenExpiry = payload.exp * 1000;
+        } catch { tokenExpiry = Date.now() + 15 * 60 * 1000; }
+
+        updateUserBar();
+        updateTokenDisplay();
+        startTokenTimer();
+        setStatus(true);
+        toast(`Welcome, ${data.user.role}!`);
+        setTimeout(() => showPage('dashboard'), 400);
+      } else {
+        toast(data.message || 'Login failed', 'error');
+      }
+    } catch (err) {
+      toast('Cannot reach server — is it running?', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  });
+
+  // ── Refresh token ──────────────────────────────────────────────────────────
+  document.getElementById('btn-refresh-token').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-refresh-token');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const res  = await fetch(`${API}/api/auth/refresh`, {
+        method:      'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        accessToken = data.accessToken;
+        try {
+          const payload = JSON.parse(atob(accessToken.split('.')[1]));
+          tokenExpiry = payload.exp * 1000;
+        } catch { tokenExpiry = Date.now() + 15 * 60 * 1000; }
+        updateTokenDisplay();
+        toast('Token refreshed ✓');
+      } else {
+        toast(data.message || 'Refresh failed', 'error');
+      }
+    } catch { toast('Server unreachable', 'error'); }
+    finally {
+      btn.disabled = false;
+      btn.textContent = '↻ Refresh Token';
+    }
+  });
+
+  // ── Logout ─────────────────────────────────────────────────────────────────
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    try {
+      await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+    } catch { /* best-effort */ }
+    accessToken = null; currentUser = null; tokenExpiry = null;
+    clearInterval(timerInterval);
+    setStatus(false);
+    document.getElementById('login-response').style.display = 'none';
+    document.getElementById('response-panel-dash').style.display = 'none';
+    document.getElementById('quick-fill').value = '';
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
+    toast('Logged out');
+    showPage('login');
+  });
+
+  // ── Copy token ─────────────────────────────────────────────────────────────
+  document.getElementById('btn-copy-token').addEventListener('click', () => {
+    if (!accessToken) return;
+    navigator.clipboard.writeText(accessToken).then(() => toast('Token copied!'));
+  });
+
+  // ── AI endpoint calls ──────────────────────────────────────────────────────
+  const endpointConfig = {
+    free:    { method: 'GET',    path: '/api/ai/free-model',    label: 'GET /api/ai/free-model' },
+    premium: { method: 'POST',   path: '/api/ai/premium-model', label: 'POST /api/ai/premium-model' },
+    purge:   { method: 'DELETE', path: '/api/ai/purge-cache',   label: 'DELETE /api/ai/purge-cache' },
+  };
+
+  document.querySelectorAll('.btn-call').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const key    = btn.dataset.endpoint;
+      const config = endpointConfig[key];
+      if (!accessToken) { toast('No access token — log in first', 'error'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const res  = await fetch(`${API}${config.path}`, {
+          method:      config.method,
+          credentials: 'include',
+          headers:     { Authorization: `Bearer ${accessToken}` },
+        });
+        const data = await res.json();
+        showDashResponse(config.label, res.status, data);
+
+        if (res.ok) toast('Response received ✓');
+        else        toast(data.message || `HTTP ${res.status}`, 'error');
+      } catch { toast('Server unreachable', 'error'); }
+      finally {
+        btn.disabled = false;
+        btn.textContent = 'Call →';
+      }
+    });
+  });
+</script>
+</body>
+</html>

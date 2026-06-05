@@ -1,0 +1,117 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "AI-Genius Auth & RBAC",
+  "collectionId": "ai-genius-collection-001",
+  "dateExported": "2025-01-01",
+  "version": "1.2",
+  "folders": [
+    {
+      "id": "folder-auth",
+      "name": "Auth",
+      "containerId": ""
+    },
+    {
+      "id": "folder-ai",
+      "name": "AI Endpoints",
+      "containerId": ""
+    }
+  ],
+  "requests": [
+    {
+      "id": "req-01",
+      "name": "Login as Admin",
+      "url": "http://localhost:3000/api/auth/login",
+      "method": "POST",
+      "containerId": "folder-auth",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"admin@aigenius.com\",\n  \"password\": \"Admin@123\"\n}"
+      },
+      "notes": "Returns an accessToken in the body and sets a refreshToken httpOnly cookie. Copy the accessToken for the next requests."
+    },
+    {
+      "id": "req-02",
+      "name": "Login as Premium User",
+      "url": "http://localhost:3000/api/auth/login",
+      "method": "POST",
+      "containerId": "folder-auth",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"premium@aigenius.com\",\n  \"password\": \"Premium@123\"\n}"
+      }
+    },
+    {
+      "id": "req-03",
+      "name": "Login as Free User",
+      "url": "http://localhost:3000/api/auth/login",
+      "method": "POST",
+      "containerId": "folder-auth",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"free@aigenius.com\",\n  \"password\": \"Free@123\"\n}"
+      }
+    },
+    {
+      "id": "req-04",
+      "name": "Refresh Access Token",
+      "url": "http://localhost:3000/api/auth/refresh",
+      "method": "POST",
+      "containerId": "folder-auth",
+      "headers": [],
+      "notes": "The refreshToken cookie is sent automatically by Thunder Client / your browser. Returns a new accessToken."
+    },
+    {
+      "id": "req-05",
+      "name": "Logout",
+      "url": "http://localhost:3000/api/auth/logout",
+      "method": "POST",
+      "containerId": "folder-auth",
+      "headers": []
+    },
+    {
+      "id": "req-06",
+      "name": "GET /api/ai/free-model (any user)",
+      "url": "http://localhost:3000/api/ai/free-model",
+      "method": "GET",
+      "containerId": "folder-ai",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer PASTE_ACCESS_TOKEN_HERE" }
+      ],
+      "notes": "Works for Free_User, Premium_User, and Admin."
+    },
+    {
+      "id": "req-07",
+      "name": "POST /api/ai/premium-model (Premium/Admin)",
+      "url": "http://localhost:3000/api/ai/premium-model",
+      "method": "POST",
+      "containerId": "folder-ai",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer PASTE_ACCESS_TOKEN_HERE" }
+      ],
+      "notes": "Returns 403 for Free_User tokens."
+    },
+    {
+      "id": "req-08",
+      "name": "DELETE /api/ai/purge-cache (Admin only)",
+      "url": "http://localhost:3000/api/ai/purge-cache",
+      "method": "DELETE",
+      "containerId": "folder-ai",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer PASTE_ACCESS_TOKEN_HERE" }
+      ],
+      "notes": "Returns 403 for Premium_User and Free_User tokens."
+    },
+    {
+      "id": "req-09",
+      "name": "Access with NO token (expect 401)",
+      "url": "http://localhost:3000/api/ai/free-model",
+      "method": "GET",
+      "containerId": "folder-ai",
+      "headers": [],
+      "notes": "No Authorization header — should return 401 Unauthorized."
+    }
+  ]
+}
